@@ -227,6 +227,7 @@ app.get('/listMeetings/all', async (req, res) => {
       });
 
       if (response.data.meetings && response.data.meetings.length > 0) {
+        console.log(`meeting found in type: ${type}`);
         allMeetings.push(...response.data.meetings);
       }
     }
