@@ -1,7 +1,6 @@
 const express = require("express");
 const session = require('express-session');
 const crypto = require("crypto");
-const dotenv = require('dotenv');
 const axios = require('axios');
 const path = require('path');
 
