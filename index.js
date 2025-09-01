@@ -149,6 +149,90 @@ const options = {
 });
 
 
+// Get meeting details route
+app.get('/meeting/:id', async (req, res) => {
+  const meetingId = req.params.id;
+const user = req.session.user;
+
+  // Check if user is logged in and is an admin
+  if (!user || user.role !== 'admin') {
+    return res.status(403).send('🚫 Forbidden: Admins only');
+  }
+  try {
+    const tokenRes = await axios.post(
+      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID}`,
+      null,
+      {
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64'),
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const accessToken = tokenRes.data.access_token;
+    const response = await axios.get(`https://api.zoom.us/v2/meetings/${meetingId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    res.json(response.data);
+
+  } catch (error) {
+    if (error.response) {
+      // Zoom API returned an error
+      res.status(error.response.status).json({ error: error.response.data });
+    } else {
+      // Other errors
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+// Delete meeting route
+app.delete('/meeting/:id', async (req, res) => {
+  const meetingId = req.params.id;
+  const user = req.session.user;
+
+  // Check if user is logged in and is an admin
+  if (!user || user.role !== 'admin') {
+    return res.status(403).send('🚫 Forbidden: Admins only');
+  }
+
+  try {
+    const tokenRes = await axios.post(
+      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID}`,
+      null,
+      {
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64'),
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const accessToken = tokenRes.data.access_token;
+    const response = await axios.delete(`https://api.zoom.us/v2/meetings/${meetingId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.status === 204) {
+      res.json({ message: `Meeting ${meetingId} deleted successfully.` });
+    } else {
+      res.status(response.status).json({ error: response.data });
+    }
+  } catch (error) {
+    if (error.response) {
+      res.status(error.response.status).json({ error: error.response.data });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
 app.post("/webhook", (req, res) => {
     let response;
 
