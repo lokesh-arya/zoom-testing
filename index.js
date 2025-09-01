@@ -110,7 +110,7 @@ app.post('/create-meeting', async (req, res) => {
     const accessToken = tokenRes.data.access_token;
 const options = {
   method: 'POST',
-  url: 'https://api.zoom.us/v2',
+  url: 'https://api.zoom.us/v2/users/me/meetings',
   headers: {'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}`},
   data: {
     agenda: 'My Meeting agenda',
