@@ -31,7 +31,7 @@
         return;
       }
 
-      axios.delete(`https://zoom-testing-production.up.railway.app/${meetingId}`)
+      axios.delete(`https://zoom-testing-production.up.railway.app/deleteMeeting/${meetingId}`)
         .then(response => {
           console.log('✅ Deleted:', response.data);
           alert('Meeting deleted successfully!');
