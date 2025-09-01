@@ -116,7 +116,6 @@ const options = {
     agenda: 'My Meeting agenda',
     duration: 40,
     pre_schedule: true,
-    schedule_for: 'me',
     settings: {
       encryption_type: 'enhanced_encryption',
       meeting_authentication: true,
