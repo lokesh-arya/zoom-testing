@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+</head>
+<body>
+  <h2>Admin Dashboard</h2>
+  <a href="/logout">Logout</a>
+
+  <h3>Create Zoom Meeting</h3>
+  <form method="POST" action="/create-meeting">
+    <label>Topic:</label><br>
+    <input type="text" name="topic" required><br><br>
+    <label>Start Time (UTC):</label><br>
+    <input type="datetime-local" name="start_time" required><br><br>
+    <label>Duration (minutes):</label><br>
+    <input type="number" name="duration" required><br><br>
+    <button type="submit">Create Meeting</button>
+  </form>
+</body>
+</html>
