@@ -150,7 +150,7 @@ const options = {
 
 
 // Get meeting details route
-app.get('/meeting/:id', async (req, res) => {
+app.get('/getMeeting/:id', async (req, res) => {
   const meetingId = req.params.id;
 const user = req.session.user;
 
@@ -190,8 +190,61 @@ const user = req.session.user;
   }
 });
 
+
+
+app.get('/listMeetings/all', async (req, res) => {
+  const types = ['scheduled', 'live', 'upcoming'];
+  const allMeetings = [];
+    const user = req.session.user;
+
+  // Check if user is logged in and is an admin
+  if (!user || user.role !== 'admin') {
+    return res.status(403).send('🚫 Forbidden: Admins only');
+  }
+  try {
+    for (const type of types) {
+        const tokenRes = await axios.post(
+      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID}`,
+      null,
+      {
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64'),
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const accessToken = tokenRes.data.access_token;
+    
+      const response = await axios.get('https://api.zoom.us/v2/users/me/meetings', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          type,
+          page_size: 100
+        }
+      });
+
+      if (response.data.meetings && response.data.meetings.length > 0) {
+        allMeetings.push(...response.data.meetings);
+      }
+    }
+
+    res.json({ meetings: allMeetings });
+
+  } catch (error) {
+    if (error.response) {
+      res.status(error.response.status).json({ error: error.response.data });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+
 // Delete meeting route
-app.delete('/meeting/:id', async (req, res) => {
+app.delete('/deleteMeeting/:id', async (req, res) => {
   const meetingId = req.params.id;
   const user = req.session.user;
 

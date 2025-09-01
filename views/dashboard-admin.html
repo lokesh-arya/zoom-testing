@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Admin Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
 </head>
 <body>
   <h2>Admin Dashboard</h2>
@@ -17,5 +18,29 @@
     <input type="number" name="duration" required><br><br>
     <button type="submit">Create Meeting</button>
   </form>
+  <h2>Delete Zoom Meeting</h2>
+  <input type="text" id="meetingId" placeholder="Enter meeting ID">
+  <button onclick="deleteMeeting()">Delete</button>
+
+  <script>
+    function deleteMeeting() {
+      const meetingId = document.getElementById('meetingId').value;
+
+      if (!meetingId) {
+        alert('Please enter a meeting ID');
+        return;
+      }
+
+      axios.delete(`https://zoom-testing-production.up.railway.app/${meetingId}`)
+        .then(response => {
+          console.log('✅ Deleted:', response.data);
+          alert('Meeting deleted successfully!');
+        })
+        .catch(error => {
+          console.error('❌ Error:', error.response?.data || error.message);
+          alert('Failed to delete meeting.');
+        });
+    }
+  </script>
 </body>
 </html>
