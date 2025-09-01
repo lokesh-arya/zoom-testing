@@ -116,6 +116,7 @@ const options = {
     agenda: 'My Meeting agenda',
     duration: 40,
     pre_schedule: true,
+    schedule_for: process.env.HOST_EMAIL,
     settings: {
       encryption_type: 'enhanced_encryption',
       meeting_authentication: true,
@@ -137,8 +138,9 @@ const options = {
     meetings.push({
       topic,
       start_time,
-      join_url: meetingRes.data.join_url
+      join_url: data.join_url
     });
+    console.log(meetings)
 
     // ✅ Redirect to dashboard
     res.redirect('/dashboard');
