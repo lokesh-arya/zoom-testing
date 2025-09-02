@@ -3,6 +3,7 @@ const session = require('express-session');
 const crypto = require("crypto");
 const axios = require('axios').default;
 const path = require('path');
+const { format } = require('date-fns');
 
 const eventHandlers = require('./eventHandlers')
 
@@ -88,13 +89,17 @@ app.post('/create-meeting', async (req, res) => {
   }
 
   const { topic, start_time, duration } = req.body;
-  console.log("this is time in frontend");
-  console.log(start_time);
+
 
   // ✅ Basic input validation
   if (!topic || !start_time || !duration) {
     return res.status(400).send('❌ Missing required fields');
   }
+    const formattedStartTime = format(start_time, "yyyy-MM-dd'T'HH:mm:ss");
+  console.log("this is time in frontend");
+  console.log(start_time);
+    console.log("this is time after formating");
+  console.log(formattedStartTime);
 
   try {
     // 🔐 Get access token using Account Credentials (OAuth)
@@ -117,7 +122,7 @@ app.post('/create-meeting', async (req, res) => {
     const meetingPayload = {
       topic,
       type: 2, // Scheduled meeting
-      start_time, // Must be in ISO format (e.g. 2025-09-05T10:00:00)
+      formattedStartTime, // Must be in ISO format (e.g. 2025-09-05T10:00:00)
       duration: parseInt(duration), // in minutes
       timezone: 'Asia/Kolkata', // Use correct IANA timezone
       agenda: 'Scheduled via Zoom API',
@@ -147,7 +152,7 @@ app.post('/create-meeting', async (req, res) => {
     // 💾 Store locally or log meeting details
     meetings.push({
       topic: data.topic,
-      start_time: data.start_time,
+      start_time: data.formattedStartTime,
       join_url: data.join_url,
       meeting_id: data.id
     });
