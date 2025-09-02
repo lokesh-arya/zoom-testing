@@ -1,7 +1,7 @@
 const express = require("express");
 const session = require('express-session');
 const crypto = require("crypto");
-const axios = require('axios');
+const axios = require('axios').default;
 const path = require('path');
 
 const eventHandlers = require('./eventHandlers')
@@ -82,73 +82,86 @@ app.get('/dashboard', (req, res) => {
 app.post('/create-meeting', async (req, res) => {
   const user = req.session.user;
 
-  // Check if user is logged in and is an admin
+  // ✅ Check if user is an authenticated admin
   if (!user || user.role !== 'admin') {
     return res.status(403).send('🚫 Forbidden: Admins only');
   }
 
   const { topic, start_time, duration } = req.body;
 
-  // Basic input validation
+  // ✅ Basic input validation
   if (!topic || !start_time || !duration) {
     return res.status(400).send('❌ Missing required fields');
   }
 
   try {
-    // 🔐 Get access token using OAuth with account credentials grant
+    // 🔐 Get access token using Account Credentials (OAuth)
     const tokenRes = await axios.post(
       `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID}`,
       null,
       {
         headers: {
-          Authorization: 'Basic ' + Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64'),
+          Authorization: 'Basic ' + Buffer.from(
+            `${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`
+          ).toString('base64'),
           'Content-Type': 'application/json'
         }
       }
     );
-    
-    const accessToken = tokenRes.data.access_token;
-const options = {
-  method: 'POST',
-  url: 'https://api.zoom.us/v2/users/me/meetings',
-  headers: {'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}`},
-  data: {
-    agenda: 'My Meeting agenda',
-    duration: 40,
-    pre_schedule: true,
-    schedule_for: process.env.HOST_EMAIL,
-    settings: {
-      encryption_type: 'enhanced_encryption',
-      meeting_authentication: true,
-      mute_upon_entry: false,
-      participant_video: false,
-      waiting_room: true
-    },
-    start_time: start_time,
-    timezone: 'Asia/Calcutta',
-    topic: 'My Meeting testing okay',
-    type: 2
-  }
-};
 
-  const { data } = await axios.request(options);
-  console.log(data);
-    
-    // 💾 Store meeting locally (or save to DB)
-    meetings.push({
+    const accessToken = tokenRes.data.access_token;
+
+    // 🧠 Zoom meeting payload
+    const meetingPayload = {
       topic,
-      start_time,
-      join_url: data.join_url
+      type: 2, // Scheduled meeting
+      start_time, // Must be in ISO format (e.g. 2025-09-05T10:00:00)
+      duration: parseInt(duration), // in minutes
+      timezone: 'Asia/Kolkata', // Use correct IANA timezone
+      agenda: 'Scheduled via Zoom API',
+      settings: {
+        host_video: false,
+        participant_video: false,
+        waiting_room: true,
+        mute_upon_entry: true,
+        meeting_authentication: true,
+        encryption_type: 'enhanced_encryption'
+      }
+    };
+
+    const zoomRes = await axios.post(
+      'https://api.zoom.us/v2/users/me/meetings',
+      meetingPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const data = zoomRes.data;
+
+    // 💾 Store locally or log meeting details
+    meetings.push({
+      topic: data.topic,
+      start_time: data.start_time,
+      join_url: data.join_url,
+      meeting_id: data.id
     });
-    console.log(meetings)
+
+    console.log('✅ Meeting created:', data);
+    console.log('📌 Stored locally:', meetings);
 
     // ✅ Redirect to dashboard
     res.redirect('/dashboard');
+
   } catch (err) {
     console.error('❗ Zoom API Error:', err.response?.data || err.message);
     res.status(500).send('Error creating meeting. Please check logs.');
   }
 });
+
 
 
 // Get meeting details route
