@@ -88,6 +88,8 @@ app.post('/create-meeting', async (req, res) => {
   }
 
   const { topic, start_time, duration } = req.body;
+  console.log("this is time in frontend");
+  console.log(start_time);
 
   // ✅ Basic input validation
   if (!topic || !start_time || !duration) {
