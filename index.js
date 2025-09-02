@@ -120,9 +120,9 @@ app.post('/create-meeting', async (req, res) => {
 
     // 🧠 Zoom meeting payload
     const meetingPayload = {
-      topic,
+      topic: topic,
       type: 2, // Scheduled meeting
-      formattedStartTime, // Must be in ISO format (e.g. 2025-09-05T10:00:00)
+      start_time: formattedStartTime, // Must be in ISO format (e.g. 2025-09-05T10:00:00)
       duration: parseInt(duration), // in minutes
       timezone: 'Asia/Kolkata', // Use correct IANA timezone
       agenda: 'Scheduled via Zoom API',
