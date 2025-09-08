@@ -27,9 +27,9 @@ app.use(session({
 }));
 
 const users = [
-  { email: 'admin@example.com', name: 'admin', password: 'admin123', role: 'admin' },
-  { email: 'user1@example.com', name: 'user1', password: 'user123', role: 'member' },
-  { email: 'user2@example.com', name: 'user2', password: 'user123', role: 'member' }
+  { email: 'admin@example.com', name: 'admin', password: 'admin_RSF121', role: 'admin' },
+  { email: 'user1@example.com', name: 'user1', password: 'user_RSF121', role: 'member' },
+  { email: 'user2@example.com', name: 'user2', password: 'user_RSF121', role: 'member' }
 ];
 
 let meetings = [];
@@ -154,7 +154,8 @@ app.post('/create-meeting', async (req, res) => {
       topic: data.topic,
       start_time: data.formattedStartTime,
       join_url: data.join_url,
-      meeting_id: data.id
+      meeting_id: data.id,
+      start_url: data.start_url
     });
 
     console.log('✅ Meeting created:', data);
@@ -169,6 +170,55 @@ app.post('/create-meeting', async (req, res) => {
   }
 });
 
+app.post('/delete-meeting', async (req, res) => {
+  const user = req.session.user;
+
+  // Only allow admins to delete
+  if (!user || user.role !== 'admin') {
+    return res.status(403).send('🚫 Forbidden: Admins only');
+  }
+
+  const meetingId = req.body.meetingId;
+
+  if (!meetingId) {
+    return res.status(400).send('❌ Meeting ID is required');
+  }
+  
+  try {
+    // 🔐 Get access token using Account Credentials (OAuth)
+    const tokenRes = await axios.post(
+      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID}`,
+      null,
+      {
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(
+            `${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`
+          ).toString('base64'),
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const accessToken = tokenRes.data.access_token;
+    const response = await axios.delete(`https://api.zoom.us/v2/meetings/${meetingId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.status === 204) {
+      res.json({ message: `Meeting ${meetingId} deleted successfully.` });
+    } else {
+      res.status(response.status).json({ error: response.data });
+    }
+  } catch (error) {
+    if (error.response) {
+      res.status(error.response.status).json({ error: error.response.data });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
 
 
 // Get meeting details route
@@ -265,49 +315,6 @@ app.get('/listMeetings/all', async (req, res) => {
   }
 });
 
-
-// Delete meeting route
-app.delete('/deleteMeeting/:id', async (req, res) => {
-  const meetingId = req.params.id;
-  const user = req.session.user;
-
-  // Check if user is logged in and is an admin
-  if (!user || user.role !== 'admin') {
-    return res.status(403).send('🚫 Forbidden: Admins only');
-  }
-
-  try {
-    const tokenRes = await axios.post(
-      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID}`,
-      null,
-      {
-        headers: {
-          Authorization: 'Basic ' + Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64'),
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    const accessToken = tokenRes.data.access_token;
-    const response = await axios.delete(`https://api.zoom.us/v2/meetings/${meetingId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.status === 204) {
-      res.json({ message: `Meeting ${meetingId} deleted successfully.` });
-    } else {
-      res.status(response.status).json({ error: response.data });
-    }
-  } catch (error) {
-    if (error.response) {
-      res.status(error.response.status).json({ error: error.response.data });
-    } else {
-      res.status(500).json({ error: error.message });
-    }
-  }
-});
 
 app.post("/webhook", (req, res) => {
     let response;

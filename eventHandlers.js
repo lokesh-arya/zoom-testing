@@ -1,6 +1,7 @@
+const crypto = require("crypto");
 const eventHandlers = {
     "endpoint.url_validation": (req, res) => {
-        console.log("Webhook received!");
+        console.log("Webhook endpoint.url_validation received!");
         console.log("Headers:", req.headers);
         console.log("Body:", req.body);
         const hashForValidate = crypto
@@ -21,7 +22,7 @@ const eventHandlers = {
     },
 
     "meeting.participant_joined": (req, res) => {
-        console.log("Webhook received!");
+        console.log("Webhook meeting.participant_joined received!");
         console.log("Headers:", req.headers);
         console.log("Body:", req.body);
         response = {
@@ -33,7 +34,7 @@ const eventHandlers = {
     },
 
     "meeting.participant_left": (req, res) => {
-        console.log("Webhook received!");
+        console.log("Webhook meeting.participant_left received!");
         console.log("Headers:", req.headers);
         console.log("Body:", req.body);
         response = {
@@ -45,7 +46,7 @@ const eventHandlers = {
     },
 
     "meeting.created": (req, res) => {
-        console.log("Webhook received!");
+        console.log("Webhook meeting.created received!");
         console.log("Headers:", req.headers);
         console.log("Body:", req.body);
         response = {
@@ -56,7 +57,7 @@ const eventHandlers = {
         res.json(response);
     },
     "meeting.deleted": (req, res) => {
-        console.log("Webhook received!");
+        console.log("Webhook meeting.deleted received!");
         console.log("Headers:", req.headers);
         console.log("Body:", req.body);
         response = {
@@ -67,11 +68,33 @@ const eventHandlers = {
         res.json(response);
     },
     "meeting.updated": (req, res) => {
-        console.log("Webhook received!");
+        console.log("Webhook meeting.updated received!");
         console.log("Headers:", req.headers);
         console.log("Body:", req.body);
         response = {
             message: "Authorized request, meeting updated",
+            status: 200,
+        };
+        res.status(response.status);
+        res.json(response);
+    },
+    "meeting.started": (req, res) => {
+        console.log("Webhook meeting.started received!");
+        console.log("Headers:", req.headers);
+        console.log("Body:", req.body);
+        response = {
+            message: "Authorized request, meeting started",
+            status: 200,
+        };
+        res.status(response.status);
+        res.json(response);
+    },
+    "meeting.ended": (req, res) => {
+        console.log("Webhook meeting.ended received!");
+        console.log("Headers:", req.headers);
+        console.log("Body:", req.body);
+        response = {
+            message: "Authorized request, meeting ended",
             status: 200,
         };
         res.status(response.status);
